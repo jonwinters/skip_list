@@ -9,7 +9,7 @@
 #define CLOCK_REALTIME 0
 #define CLOCK_MONOTONIC 1
 
-int clock_gettime(int clk_id, struct timespec* t) {
+int my_clock_gettime(int clk_id, struct timespec* t) {
     struct timeval now;
     int rv = gettimeofday(&now, NULL);
     if (rv) return rv;
@@ -47,12 +47,12 @@ main(void)
 
     /* Insert test */
     srandom(time(NULL));
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    my_clock_gettime(CLOCK_MONOTONIC, &start);
     for (i = 0; i < N; i++) {
         int value = key[i] = (int)random();
         skiplist_insert(list, key[i], value);
     }
-    clock_gettime(CLOCK_MONOTONIC, &end);
+    my_clock_gettime(CLOCK_MONOTONIC, &end);
     printf("time span: %ldms\n", (end.tv_sec - start.tv_sec)*1000 + (end.tv_nsec - start.tv_nsec)/1000000);
     #ifdef SKIPLIST_DEBUG
     skiplist_dump(list);
@@ -60,7 +60,7 @@ main(void)
 
     /* Search test */
     printf("Now search each node...\n");
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    my_clock_gettime(CLOCK_MONOTONIC, &start);
     for (i = 0; i < N; i++) {
         struct skipnode *node = skiplist_search(list, key[i]);
         if (node != NULL) {
@@ -71,16 +71,16 @@ main(void)
             printf("Not found:0x%08x\n", key[i]);
         }
     }
-    clock_gettime(CLOCK_MONOTONIC, &end);
+    my_clock_gettime(CLOCK_MONOTONIC, &end);
     printf("time span: %ldms\n", (end.tv_sec - start.tv_sec)*1000 + (end.tv_nsec - start.tv_nsec)/1000000);
 
     /* Delete test */
     printf("Now remove all nodes...\n");
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    my_clock_gettime(CLOCK_MONOTONIC, &start);
     for (i = 0; i < N; i++) {
         skiplist_remove(list, key[i]);
     }
-    clock_gettime(CLOCK_MONOTONIC, &end);
+    my_clock_gettime(CLOCK_MONOTONIC, &end);
     printf("time span: %ldms\n", (end.tv_sec - start.tv_sec)*1000 + (end.tv_nsec - start.tv_nsec)/1000000);
     #ifdef SKIPLIST_DEBUG
     skiplist_dump(list);
