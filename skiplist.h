@@ -46,14 +46,8 @@ static inline int list_empty(struct sk_link *link)
         return link->next == link;
 }
 
-#define list_entry(ptr, type, member) \
-        ((type *)((char *)(ptr) - (size_t)(&((type *)0)->member)))
-
 #define skiplist_foreach(pos, end) \
         for (; pos != end; pos = pos->next)
-
-#define skiplist_foreach_safe(pos, n, end) \
-        for (n = pos->next; pos != end; pos = n, n = pos->next)
 
 #define MAX_LEVEL 32  /* Should be enough for 2^32 elements */
 
@@ -103,8 +97,9 @@ static void skiplist_delete(struct skiplist *list)
 {
         struct sk_link *n;
         struct sk_link *pos = list->head[0].next;
-        skiplist_foreach_safe(pos, n, &list->head[0]) {
-                struct skipnode *node = list_entry(pos, struct skipnode, link[0]);
+    for (n = pos->next; pos != &list->head[0]; pos = n, n = pos->next) {
+                struct skipnode *node = ((struct skipnode *) ((char *) (pos) -
+                                                              (size_t) (&((struct skipnode *) 0)->link[0])));
                 skipnode_delete(node);
         }
         free(list);
@@ -130,7 +125,7 @@ static struct skipnode *skiplist_search(struct skiplist *list, int key)
         for (; i >= 0; i--) {
                 pos = pos->next;
                 skiplist_foreach(pos, end) {
-                        node = list_entry(pos, struct skipnode, link[i]);
+                        node = ((struct skipnode *) ((char *) (pos) - (size_t) (&((struct skipnode *) 0)->link[i])));
                         if (node->key >= key) {
                                 end = &node->link[i];
                                 break;
@@ -164,7 +159,8 @@ skiplist_insert(struct skiplist *list, int key, int value)
                 for (; i >= 0; i--) {
                         pos = pos->next;
                         skiplist_foreach(pos, end) {
-                                struct skipnode *nd = list_entry(pos, struct skipnode, link[i]);
+                                struct skipnode *nd = ((struct skipnode *) ((char *) (pos) -
+                                                                            (size_t) (&((struct skipnode *) 0)->link[i])));
                                 if (nd->key >= key) {
                                         end = &nd->link[i];
                                         break;
@@ -206,8 +202,8 @@ static void skiplist_remove(struct skiplist *list, int key)
 
         for (; i >= 0; i--) {
                 pos = pos->next;
-                skiplist_foreach_safe(pos, n, end) {
-                        node = list_entry(pos, struct skipnode, link[i]);
+            for (n = pos->next; pos != end; pos = n, n = pos->next) {
+                        node = ((struct skipnode *) ((char *) (pos) - (size_t) (&((struct skipnode *) 0)->link[i])));
                         if (node->key > key) {
                                 end = &node->link[i];
                                 break;
@@ -234,7 +230,7 @@ static void skiplist_dump(struct skiplist *list)
                 pos = pos->next;
                 printf("level %d:\n", i + 1);
                 skiplist_foreach(pos, end) {
-                        node = list_entry(pos, struct skipnode, link[i]);
+                        node = ((struct skipnode *) ((char *) (pos) - (size_t) (&((struct skipnode *) 0)->link[i])));
                         printf("key:0x%08x value:0x%08x\n", node->key, node->value);
                 }
                 pos = &list->head[i];
